@@ -4,8 +4,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_50eeg"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        mc:Ignorable="d" 
+        xmlns:viewmodel="clr-namespace:_50eeg.ViewModel" d:DataContext="{d:DesignInstance Type=viewmodel:MainViewModel}"
+        Title="MainWindow" Height="900" Width="1600">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -46,7 +47,7 @@
                 </Border>
                 <Border BorderBrush="White" BorderThickness="2 0 0 0" Grid.Column="1">
                     <Grid Grid.Column="1">
-                           
+                        <Grid Name="UC_SciChart"/>
                     </Grid>
                 </Border>
             </Grid>

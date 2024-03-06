@@ -1,4 +1,6 @@
-﻿using System;
+﻿using _50eeg.UserController;
+using _50eeg.ViewModel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,7 +24,15 @@ namespace _50eeg
     {
         public MainWindow()
         {
+            this.DataContext = new MainViewModel();
+            
             InitializeComponent();
+            scichart demo  = new scichart();
+            UC_SciChart.Children.Add(demo);
         }
+        //private void Window_loaded(object sender,RoutedEventArgs e)
+        //{
+            
+        //}
     }
 }
