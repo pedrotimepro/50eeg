@@ -1,4 +1,5 @@
-﻿using GalaSoft.MvvmLight;
+﻿using _50eeg.Model;
+using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using System;
 using System.Collections.Generic;
@@ -29,10 +30,12 @@ namespace _50eeg.ViewModel
         private const int ChannelCount = 50; // Number of channels to render
         private const int Size = 1000;       // Size of each channel in points (FIFO Buffer)
 
-        private uint _timerInterval = 20; // Interval of the timer to generate data in ms        
-        private int _bufferSize = 15;     // Number of points to append to each channel each timer tick
+        private uint _timerDrawInterval = 1000; // Interval of the timer to generate data in ms        
+        private uint _timerUpdateInterval = 10;
+        private int _bufferSize = 10;     // Number of points to append to each channel each timer tick
 
-        private Timer _timer;
+        private Timer _timerDraw;
+        private Timer _timerUpdate;
         private readonly object _syncRoot = new object();
 
         // X, Y buffers used to buffer data into the Scichart instances in blocks of BufferSize
@@ -70,10 +73,10 @@ namespace _50eeg.ViewModel
 
         public double TimerInterval
         {
-            get => _timerInterval;
+            get => _timerDrawInterval;
             set
             {
-                _timerInterval = (uint)value;
+                _timerDrawInterval = (uint)value;
                 RaisePropertyChanged("TimerInterval");
                 Stop();
             }
@@ -133,10 +136,16 @@ namespace _50eeg.ViewModel
                 IsReset = false;
                 xBuffer = new double[_bufferSize];
                 yBuffer = new double[_bufferSize];
-                _timer = new Timer(_timerInterval);
-                _timer.Elapsed += OnTick;
-                _timer.AutoReset = true;
-                _timer.Start();
+                _timerDraw = new Timer(_timerDrawInterval);
+                _timerDraw.Elapsed += OnDrawTick;
+                _timerDraw.AutoReset = true;
+                _timerDraw.Start();
+                _timerUpdate = new Timer(_timerUpdateInterval);
+                _timerUpdate.Elapsed += OnUpdateTick;
+                _timerUpdate.AutoReset = true;
+                _timerUpdate.Start();
+                
+
             }
         }
 
@@ -144,7 +153,7 @@ namespace _50eeg.ViewModel
         {
             if (IsRunning)
             {
-                _timer.Stop();
+                _timerDraw.Stop();
                 IsRunning = false;
             }
         }
@@ -161,19 +170,42 @@ namespace _50eeg.ViewModel
             {
                 var channelViewModel = new EEGChannelViewModel(Size, _colors[i % 16]) { ChannelName = "Channel " + i };
                 ChannelViewModels.Add(channelViewModel);
+               
             }
 
             IsReset = true;
         }
-
-        private void OnTick(object sender, EventArgs e)
+        // 导入数据类
+        private DataList datalist = new DataList();
+        /// <summary>
+        /// 加入随机数据，要使用将随机数改变即可
+        /// 只需要编写数据上传方式和解析即可
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnUpdateTick(object sender,EventArgs e)
         {
+            //lock (_syncRoot)
+            //{
+                for(int i = 0; i < _channelViewModels.Count; i++)
+                {
+                    double signals = 100*_random.NextDouble();
+                    // 第一个参数是信号，第二个参数是通道
+                    datalist.Update(signals, i);
+                }
+                
+            //}
+        }
+
+        private void OnDrawTick(object sender, EventArgs e)
+        {
+            
             // Ensure only one timer Tick processed at a time
             lock (_syncRoot)
             {
-                foreach (var channel in _channelViewModels)
+                for (int i = 0; i < _channelViewModels.Count; i++)
                 {
-                    var dataseries = channel.ChannelDataSeries;
+                    var dataseries = _channelViewModels[i].ChannelDataSeries;
 
                     // Preload previous value with k-1 sample, or 0.0 if the count is zero
                     double xValue = dataseries.Count > 0 ? dataseries.XValues[dataseries.Count - 1] : 0.0;
@@ -183,7 +215,7 @@ namespace _50eeg.ViewModel
                     {
                         // Generate a new X,Y value in the random walk
                         xValue += 1;
-                        double yValue = _random.NextDouble();
+                        double yValue = datalist.DataGet(j);
 
                         xBuffer[j] = xValue;
                         yBuffer[j] = yValue;
@@ -195,6 +227,7 @@ namespace _50eeg.ViewModel
                     // For reporting current size to GUI
                     _currentSize = dataseries.Count;
                 }
+                
             }
         }
     } 

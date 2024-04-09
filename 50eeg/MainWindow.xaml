@@ -36,15 +36,6 @@
                 </LinearGradientBrush>
             </Border.Background>
             <Grid Grid.Row="1">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="3*"/>
-                </Grid.ColumnDefinitions>
-                <Border BorderBrush="White" BorderThickness="0 0 2 0" Grid.Column="0">
-                    <Grid Grid.Column="0">
-
-                    </Grid>
-                </Border>
                 <Border BorderBrush="White" BorderThickness="2 0 0 0" Grid.Column="1">
                     <Grid Grid.Column="1">
                         <Grid Name="UC_SciChart"/>
